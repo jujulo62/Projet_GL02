@@ -70,6 +70,42 @@ VpfParser.prototype.cours = function(input){
         return false;
     }
 }
+// <UE> = 2*4UPPERALPHA 2DIGIT
+VpfParser.prototype.ue = function(input){
+    
+}
+
+// <Créneau> = ‘1,’ <Type> ‘,’ <Capa> ‘,’ <Horaire> ‘,’ <Index> ‘,’ <Salle>
+VpfParser.prototype.creneau = function(input){
+    
+}
+
+// <Type> = 1UPPERALPHA 1DIGIT
+VpfParser.prototype.type = function(input){
+    
+}
+
+// <Capacité> = ‘P=’ 1*DIGIT
+VpfParser.prototype.capa= function(input){
+    
+}
+
+// <Index> = 1UPPERALPHA 1DIGIT
+VpfParser.prototype.index = function(input){
+    
+}
+
+// <Salle> = ‘S=’ 4(UPPERALPHA / DIGIT)
+VpfParser.prototype.salle = function(input){
+}
+
+// <Horaire> = ‘H=’ <Jour> WSD <Heure> ‘-’ <Heure>
+VpfParser.prototype.horaire = function(input){
+   
+}
+
+
+
 
 
 CRUParser.prototype.errMsg = function(msg, input){
