@@ -17,33 +17,24 @@ function capaciteSalle(idSalle){
         console.log("Veuillez ajouter un fichier à la base de donnée");
     }
 
-	for(const[key,value]  of Object.entries(analyzer.parsedCRU)){
+	for(const[key,value] of Object.entries(analyzer.parsedCRU)){
 		console.log("UE : %s\n",key);
 		for(const[key2,value2] of Object.entries(value)){
 			// console.log(value2.salle)
             // Pour que je me fonctionne comment ca marche
 
-            if (value2.salle == idSalle){
-                capacity=value2.capacite
+            if (value2.salle === idSalle){
+                capacity=value2.capacite;
+                console.log("la salle numero %s a une capacité de %d",idSalle,capacity);
+                return ;
             }
 		}
 	}
 
-
-
     if(capacity===-1){
-        console.log("La salle n'est pas trouvé")
-        return;
-    }else{
-        console.log("la salle numero %s a une capacité de %d",idSalle,capacity)
+        console.log("La salle n'est pas trouvé");
         return;
     }
-    
-
-
-
-
+    // Ici on retourne rien, on l'affiche seulement, si besoin faut changer le return
     
 }
-
-module.exports = { capaciteSalle };
