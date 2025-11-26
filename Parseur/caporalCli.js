@@ -23,7 +23,7 @@ cli
 			var analyzer = new CRUParser(options.showTokenize, options.showSymbols);
 			analyzer.parse(data);
 			
-			if(analyzer.errorCount === 0 && Object.keys(analyzer.parsedCRU).length > 0){
+			if(analyzer.errorCount === 0 && Object.keys(analyzer.mapUEs).length > 0){
 				logger.info("The .cru file is a valid cru file".green);
 			}else{
 				logger.info("The .cru file contains error , contains no UE or is in the wrong format".red);
