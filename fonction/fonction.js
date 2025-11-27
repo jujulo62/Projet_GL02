@@ -13,7 +13,7 @@ function capaciteSalle(idSalle){
 
     if(!idSalle) console.log("L'argument rentré est invalide");
 
-    if (analyzer.parsedCRU == {} ){
+    if (!analyzer.parsedCRU || Object.keys(analyzer.parsedCRU).length === 0){
         console.log("Veuillez ajouter un fichier à la base de donnée");
     }
 
@@ -30,6 +30,7 @@ function capaciteSalle(idSalle){
             }
 		}
 	}
+    if(capacity === -1){
 
     if(capacity===-1){
         console.log("La salle n'est pas trouvé");
@@ -37,4 +38,51 @@ function capaciteSalle(idSalle){
     }
     // Ici on retourne rien, on l'affiche seulement, si besoin faut changer le return
     
+}
+
+function toMinutes(hhmm) {
+    const [h, m] = hhmm.split(":").map(Number);
+    return h * 60 + m;
+}
+
+function salleDisponible(heureDebut, heureFin, jour){
+
+    let sallesIndisponibles = new Set();
+    let sallesListe = new Set();
+    let sallesDispo = [];
+
+
+    if(!heureDebut || !heureFin || !jour){
+        console.log("erreur dans les arguments");
+        return ;
+    }
+
+    if (!analyzer.parsedCRU || Object.keys(analyzer.parsedCRU).length === 0){
+        console.log("Veuillez ajouter un fichier à la base de donnée");
+    }
+
+    const debut = toMinutes(heureDebut);
+    const fin = toMinutes(heureFin);
+    
+	for(const[key,value] of Object.entries(analyzer.parsedCRU)){
+        for(const[key2,value2] of Object.entries(value)){
+            
+            let debut2 = toMinutes(value2.heureDebut);
+            let fin2 = toMinutes(value2.heureFin);
+
+            sallesListe.add(value2.salle);
+
+            if (value2.jour === jour && debut < fin2 && fin > debut2){
+                sallesIndisponibles.add(value2.salle);
+            }
+		}
+	}
+
+    for(let salle of sallesListe){
+        if(!sallesIndisponibles.has(salle)){
+            sallesDispo.push(salle);
+        }
+    }
+
+    return sallesDispo ;
 }
