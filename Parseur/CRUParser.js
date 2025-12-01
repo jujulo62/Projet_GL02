@@ -20,7 +20,7 @@ CRUParser.prototype.tokenize = function(data){
 
 	// Séparateurs : retour à la ligne, ',', 'P=', 'H=', '-', 'S=', '//', ':'
 	// On garde les séparateurs importants pour le parsing
-    const separator = /(\r\n|,| |:|P=|H=|-|S=|\/\/|\/|\+)/g; // Ajout de '|+' pour le +UE du des cours
+    const separator = /(\r\n|,| |:|\n|P=|H=|-|S=|\/\/|\/|\+)/g; // Ajout de '|+' pour le +UE du des cours
 	data = data.split(separator);
 	data = data.filter((val) => val.trim() !== ''); // Supprime les éléments vides
 
@@ -308,76 +308,5 @@ CRUParser.prototype.expect = function(s, input){
 
 // Parser rules
 
-// <liste_poi> = *(<poi>) "$$"
-CRUParser.prototype.listPoi = function(input){
-	this.poi(input);
-	this.expect("$$", input);
-}
-
-// <poi> = "START_POI" <eol> <body> "END_POI"
-CRUParser.prototype.poi = function(input){
-
-	if(this.check("START_POI", input)){
-		this.expect("START_POI", input);
-		var args = this.body(input);
-		var p = new POI(args.nm, args.lt, args.lg, []);
-		this.note(input, p);
-		this.expect("END_POI",input);
-		this.parsedPOI.push(p);
-		if(input.length > 0){
-			this.poi(input);
-		}
-		return true;
-	}else{
-		return false;
-	}
-
-}
-
-// <body> = <name> <eol> <latlng> <eol> <optional>
-CRUParser.prototype.body = function(input){
-	var nm = this.name(input);
-	var ltlg = this.latlng(input);
-	return { nm: nm, lt: ltlg.lat, lg: ltlg.lng };
-}
-
-// <name> = "name: " 1*WCHAR
-CRUParser.prototype.name = function(input){
-	this.expect("name",input)
-	var curS = this.next(input);
-	if(matched = curS.match(/[\wàéèêîù'\s]+/i)){
-		return matched[0];
-	}else{
-		this.errMsg("Invalid name", input);
-	}
-}
-
-// <latlng> = "latlng: " ?"-" 1*3DIGIT "." 1*DIGIT", " ?"-" 1*3DIGIT "." 1*DIGIT
-CRUParser.prototype.latlng = function(input){
-	this.expect("latlng",input)
-	var curS = this.next(input);
-	if(matched = curS.match(/(-?\d+(\.\d+)?);(-?\d+(\.\d+)?)/)){
-		return { lat: matched[1], lng: matched[3] };
-	}else{
-		this.errMsg("Invalid latlng", input);
-	}
-}
-
-// <optional> = *(<note>)
-// <note> = "note: " "0"/"1"/"2"/"3"/"4"/"5"
-CRUParser.prototype.note = function (input, curPoi){
-	if(this.check("note", input)){
-		this.expect("note", input);
-		var curS = this.next(input);
-		if(matched = curS.match(/[12345]/)){
-			curPoi.addRating(matched[0]);
-			if(input.length > 0){
-				this.note(input, curPoi);
-			}
-		}else{
-			this.errMsg("Invalid note");
-		}	
-	}
-}
 
 module.exports = CRUParser;
