@@ -33,14 +33,11 @@ function capaciteSalle(idSalle) {
 
 }
 
-function sallesCours(analyzer, cours) {
+function sallesCours(cours) {
 
     if (!analyzer.parsedCRU || Object.keys(analyzer.parsedCRU).length === 0) {
         console.log("Veuillez ajouter un fichier à la base de donnée");
         return;
-    }else{
-        console.log("la salle numero %s a une capacité de %d",idSalle,capacity);
-        return ;
     }
 
     if (!cours) {
@@ -60,13 +57,88 @@ function sallesCours(analyzer, cours) {
 }
 
 
-
-
+function toMinutesArr(hhmm) {
+    const [h, m] = hhmm.map(Number);
+    return h * 60 + m;
+}
 
 function toMinutes(hhmm) {
     const [h, m] = hhmm.split(":").map(Number);
     return h * 60 + m;
 }
+
+
+
+// Renvoie les disponibilités d'une salle 
+function disponibilitesSalle(salle, heureDebut="8:00", heureFin="20:00") {
+    
+    if (!salle) {
+        console.log("L'argument rentré est invalide");
+        return;
+    }
+
+    if (!analyzer.parsedCRU || Object.keys(analyzer.parsedCRU).length === 0) {
+        console.log("Veuillez ajouter un fichier à la base de donnée");
+        return;
+    }
+
+    const jours = ['L', 'MA', 'ME', 'J', 'V', 'S', 'D'];
+    const debut = toMinutes(heureDebut);
+    const fin = toMinutes(heureFin);
+
+    let disponibilites = {};
+
+    for (let jour of jours) {
+        let currentTimeMin = debut;
+        disponibilites[jour] = [];
+
+        // Récupérer les créneaux pour la salle et le jour donnés
+        let creneauxJour = Object.values(analyzer.parsedCRU).flat().filter(
+            creneau => creneau.salle === salle && creneau.jour === jour
+        );
+
+        // Trier les créneaux par heure de début
+        creneauxJour.sort((a, b) => toMinutesArr(a.heureDebut) - toMinutesArr(b.heureDebut));
+
+        for (let creneau of creneauxJour) {
+            let creneauDebutMin = toMinutesArr(creneau.heureDebut);
+            let creneauFinMin = toMinutesArr(creneau.heureFin);
+
+            if (creneauDebutMin > currentTimeMin) {
+                disponibilites[jour].push({
+                    debut: `${Math.floor(currentTimeMin / 60)}:${String(currentTimeMin % 60).padStart(2, '0')}`,
+                    fin: `${Math.floor(creneauDebutMin / 60)}:${String(creneauDebutMin % 60).padStart(2, '0')}`
+                });
+            }
+            currentTimeMin = Math.max(currentTimeMin, creneauFinMin);
+        }
+
+
+        // On gère jusque fin de journée
+        if (currentTimeMin < fin) {
+            disponibilites[jour].push({
+                debut: `${Math.floor(currentTimeMin / 60)}:${String(currentTimeMin % 60).padStart(2, '0')}`,
+                fin: `${Math.floor(fin / 60)}:${String(fin % 60).padStart(2, '0')}`
+            });
+        }
+
+    }
+
+    // Affichage des disponibilités
+    for (let jour of jours) {
+        console.log(`Disponibilités pour la salle ${salle} - ${jour} :`.green);
+        if (disponibilites[jour].length === 0) {
+            console.log("Aucune disponibilité".red);
+        } else {
+            for (let plage of disponibilites[jour]) {
+                console.log(`De ${plage.debut} à ${plage.fin}`.blue);
+            }
+        }
+        console.log("");
+    }
+}
+
+
 
 function salleDisponible(heureDebut, heureFin, jour) {
 
@@ -143,4 +215,13 @@ function classementCapacite(){
     });
 
     return tableauSalles;
+}
+
+module.exports = {
+    parseFile,
+    capaciteSalle,
+    sallesCours,
+    disponibilitesSalle,
+    salleDisponible,
+    classementCapacite
 }
