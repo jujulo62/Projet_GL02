@@ -1,4 +1,3 @@
-const fs = require('fs');
 const path = require('path');
 const CRUParser = require('../Parseur/CRUParser');
 
@@ -9,36 +8,32 @@ function parseFile(){
 }
 
 function capaciteSalle(idSalle){
-    var capacity=-1;
 
     if(!idSalle) console.log("L'argument rentré est invalide");
 
     if (!analyzer.parsedCRU || Object.keys(analyzer.parsedCRU).length === 0){
         console.log("Veuillez ajouter un fichier à la base de donnée");
+        return ;
     }
 
-	for(const[key,value] of Object.entries(analyzer.parsedCRU)){
-		console.log("UE : %s\n",key);
-		for(const[key2,value2] of Object.entries(value)){
-			// console.log(value2.salle)
-            // Pour que je me fonctionne comment ca marche
+    const creneauxSalle = Object.values(analyzer.parsedCRU).flat().filter(
+        creneau => creneau.salle === idSalle
+    );
 
-            if (value2.salle === idSalle){
-                capacity=value2.capacite;
-                console.log("la salle numero %s a une capacité de %d",idSalle,capacity);
-                return ;
-            }
-		}
-	}
-    if(capacity === -1){
-
-    if(capacity===-1){
-        console.log("La salle n'est pas trouvé");
+    if (creneauxSalle.length === 0){
+        console.log("Salle introuvable dans les créneaux");
         return;
     }
-    // Ici on retourne rien, on l'affiche seulement, si besoin faut changer le return
+
+    let capacity = creneauxSalle.reduce((maxCapa, creneau) => 
+        Math.max(maxCapa, creneau.capacite), 0
+    );
+
+    console.log(`La capacité maximale de la salle ${idSalle} est de ${capacity} personnes.`);
     
 }
+
+
 
 function toMinutes(hhmm) {
     const [h, m] = hhmm.split(":").map(Number);
@@ -86,3 +81,9 @@ function salleDisponible(heureDebut, heureFin, jour){
 
     return sallesDispo ;
 }
+
+module.exports = {
+    parseFile,
+    capaciteSalle,
+    salleDisponible
+};
