@@ -10,7 +10,7 @@ describe("Program testing of Creneau", function(){
 
 
 	});
-	it("can create a new Creneau", function(){
+	it("peut créer un nv Creneau", function(){
         let inputString = "1,D1,P=25,H=V 9:00-12:00,F1,S=B103//";
         let tokensCreneau = this.parser.tokenize(inputString);
         // Pour enlever le "1" au début
@@ -19,14 +19,27 @@ describe("Program testing of Creneau", function(){
 		expect(this.parser.creneau(tokensCreneau)).toEqual(this.c);
         
 	});
-	it("can find the type", function(){
+	it("peut trouver le type", function(){
 		
 		expect(this.c).toBeDefined();
 		expect(this.c.type).toBe("D1");
 		expect(this.c).toEqual(jasmine.objectContaining({type: "D1"}));
 		
 	});
-	
+	it("peut parser un nom d'UE", function(){
+        let inputStringUE = "+AP1B"; 
+        let tokensUE = this.parser.tokenize(inputStringUE);
+        this.parser.expect("+", tokensUE); 
+        const ueName = this.parser.ue(tokensUE);
+        expect(ueName).toBe("AP1B");
+    });
+	it("peut reconnaître le UVUV de début de fichier", function(){
+        let inputStringUE = "+UVUV"; 
+        let tokensUE = this.parser.tokenize(inputStringUE);
+        this.parser.expect("+", tokensUE); 
+        const ueName = this.parser.ue(tokensUE);
+        expect(ueName).toBe("UE_TEST");
+    });
 	
 
 	
