@@ -182,6 +182,51 @@ function salleDisponible(heureDebut, heureFin, jour) {
     return sallesDispo ;
 }
 
+function verifierRecouvrements() {
+    if (!analyzer.parsedCRU || Object.keys(analyzer.parsedCRU).length === 0) {
+        console.log("Veuillez ajouter un fichier à la base de donnée");
+        return false;
+    }
+
+    // Recouvrement = une meme salle a deux cours en même temps
+    creneauxSalles = new Map();
+    for (const [ue, creneaux] of Object.entries(analyzer.parsedCRU)) {
+        for (const creneau of creneaux) {
+            if (!creneauxSalles.has(creneau.salle)) {
+                creneauxSalles.set(creneau.salle, []);
+            }
+            creneauxSalles.get(creneau.salle).push({cours: ue, ...creneau});
+        }
+    }
+
+    let hasRecouvrement = false;
+
+    for (const [salle, creneaux] of creneauxSalles.entries()) {
+        // Trier les créneaux par horaire de début
+        creneaux.sort((a, b) => {
+            return a.debutTotMin - b.debutTotMin;
+        });
+
+        for (let i = 1; i < creneaux.length; i++) {
+            let prevCreneau = creneaux[i - 1];
+            let currCreneau = creneaux[i];
+
+            if (prevCreneau.finTotMin > currCreneau.debutTotMin) {
+                console.log(`Recouvrement détecté dans la salle ${salle} entre les créneaux :`.red);
+                console.log(` - ${prevCreneau.jour}, ${prevCreneau.heureDebut.join(":")} à ${prevCreneau.heureFin.join(":")} pour ${prevCreneau.cours}`.yellow);
+                console.log(` - ${currCreneau.jour}, ${currCreneau.heureDebut.join(":")} à ${currCreneau.heureFin.join(":")} pour ${currCreneau.cours}`.yellow);
+                hasRecouvrement = true;
+            }
+        }
+    }
+
+    if (!hasRecouvrement) {
+        console.log("Aucun recouvrement détecté entre les créneaux.".green);
+    }
+
+    return hasRecouvrement;
+}
+
 function classementCapacite(){
     if (!analyzer.parsedCRU || Object.keys(analyzer.parsedCRU).length === 0) {
         console.log("Veuillez d'abord ajouter un fichier à la base de données.");
@@ -223,5 +268,6 @@ module.exports = {
     sallesCours,
     disponibilitesSalle,
     salleDisponible,
-    classementCapacite
+    classementCapacite,
+    verifierRecouvrements
 }
