@@ -1,7 +1,8 @@
 const path = require('path');
-const CRUParser = require('../Parseur/CRUParser');
+const CRUParser = require('../Parseur/CRUParser'); 
+const ICalendar = require('../Parseur/ICalendar'); 
 
-let analyzer = new CRUParser();
+let analyzer = new CRUParser(); // Instance Globale, désormais exposée
 
 function parseFile() {
     // A completer plus tardd
@@ -259,6 +260,63 @@ function classementCapacite(){
     return tableauSalles;
 }
 
+/**
+ * Génère le fichier iCalendar pour les UEs et la période spécifiées.
+ * @param {string} dateDebutStr - Date de début (YYYY-MM-DD).
+ * @param {string} dateFinStr - Date de fin (YYYY-MM-DD).
+ * @param {Array<string>} ues - Liste des UEs à inclure.
+ */
+function genererIcal(dateDebutStr, dateFinStr, ues) {
+    if (!analyzer.parsedCRU || Object.keys(analyzer.parsedCRU).length === 0) {
+        console.log("Veuillez ajouter un fichier à la base de donnée");
+        return;
+    }
+    
+    // Vérification des arguments (simplifiée, une validation de date plus robuste serait idéale)
+    if (!dateDebutStr || !dateFinStr || !ues || ues.length === 0) {
+        console.log("Arguments manquants ou invalides (dateDebut, dateFin, UEs)");
+        return;
+    }
+
+    let eventsContent = [];
+
+    // 1. Filtrer les créneaux pour les UEs demandées
+    for (let ue of ues) {
+        if (analyzer.parsedCRU[ue]) {
+            for (let creneau of analyzer.parsedCRU[ue]) {
+                // L'UE est déjà sur le créneau (ajouté dans CRUParser.js)
+                
+                // 2. Générer l'événement iCalendar
+                try {
+                    const event = ICalendar.generateEvent(creneau, dateDebutStr, dateFinStr);
+                    eventsContent.push(event);
+                } catch (error) {
+                    console.log(`Erreur lors de la génération de l'événement pour ${ue} : ${error.message}`);
+                }
+            }
+        } else {
+            console.log(`Attention : L'UE ${ue} est introuvable.`);
+        }
+    }
+
+    if (eventsContent.length === 0) {
+        console.log("Aucun créneau trouvé pour les critères spécifiés. Fichier non généré.");
+        return;
+    }
+
+    // 3. Générer le fichier complet et l'écrire
+    const icalFileContent = ICalendar.generateICalFile(eventsContent.join('\n'));
+    const outputFilename = 'schedule_export.ics';
+
+    try {
+        require('fs').writeFileSync(outputFilename, icalFileContent); 
+        console.log(`Export iCalendar réussi ! Fichier généré : ${outputFilename}`.green);
+    } catch (error) {
+        console.log(`Erreur lors de l'écriture du fichier ${outputFilename}: ${error.message}`.red);
+    }
+}
+
+
 module.exports = {
     parseFile,
     capaciteSalle,
@@ -266,5 +324,7 @@ module.exports = {
     disponibilitesSalle,
     salleDisponible,
     classementCapacite,
-    verifierRecouvrements
+    verifierRecouvrements,
+    genererIcal,
+    analyzer // EXPORT DE L'INSTANCE GLOBALE
 }

@@ -2,7 +2,8 @@ const fs = require('fs');
 const colors = require('colors');
 const CRUParser = require('./CRUParser.js');
 
-const {capaciteSalle, sallesCours} = require('../fonction/fonction.js');
+// Import de l'analyzer global et des fonctions depuis fonction.js
+const {capaciteSalle, sallesCours, genererIcal, analyzer} = require('../fonction/fonction.js'); 
 
 const vg = require('vega');
 const vegalite = require('vega-lite');
@@ -22,16 +23,17 @@ cli
 				return logger.warn(err);
 			}
 	  
-			var analyzer = new CRUParser(options.showTokenize, options.showSymbols);
-			analyzer.parse(data);
+			// Crée une instance locale pour le check/affichage, qui ne doit PAS être l'analyzer global
+			var localAnalyzer = new CRUParser(options.showTokenize, options.showSymbols); 
+			localAnalyzer.parse(data);
 			
-			if(analyzer.errorCount === 0 && Object.keys(analyzer.parsedCRU).length > 0){
+			if(localAnalyzer.errorCount === 0 && Object.keys(localAnalyzer.parsedCRU).length > 0){
 				logger.info("The .cru file is a valid cru file".green);
 			}else{
 				logger.info("The .cru file contains error , contains no UE or is in the wrong format".red);
 			}
 			
-			logger.debug(analyzer.parsedPOI);
+			logger.debug(localAnalyzer.parsedPOI);
 
 		});
 			
@@ -49,13 +51,30 @@ cli
 			analyzer.dataPrinter(data);
 		});
 	})
-	// readme
-	//.command('readme', 'Display the README.txt file')
-	//.action(({args, options, logger}) =>
-	//  ...
-	//})
 	
-	
+	// Nouvelle commande : icalendar (SPEC_FONC_5)
+	.command('icalendar', 'Génère un fichier iCalendar pour les UEs entre 2 dates.')
+	.argument('<file>', 'Le fichier CRU à parser.')
+	.argument('<startDate>', 'Date de début de la période (YYYY-MM-DD).')
+	.argument('<endDate>', 'Date de fin de la période (YYYY-MM-DD).')
+	.argument('<ues...>', 'Liste des UEs à inclure, séparées par des espaces (ex: LE01 MT03).')
+	.action(({args, logger}) => {
+		fs.readFile(args.file, 'utf8', function (err, data) {
+			if (err) {
+				return logger.warn(err);
+			}
+			
+			// *** CORRECTION ICI : Utiliser l'analyzer GLOBAL importé ***
+			analyzer.parse(data); 
+			
+			if (analyzer.errorCount === 0 && Object.keys(analyzer.parsedCRU).length > 0) {
+				// L'analyzer GLOBAL est maintenant peuplé, genererIcal peut travailler
+				genererIcal(args.startDate, args.endDate, args.ues);
+			} else {
+				logger.info("Impossible de parser le fichier CRU pour l'export iCalendar.".red);
+			}
+		});
+	})
 	// search
 	.command('search', 'Free text search on POIs\' name')
 	.argument('<file>', 'The Vpf file to search')
@@ -167,4 +186,3 @@ cli
 
 	
 cli.run(process.argv.slice(2));
-	

@@ -106,12 +106,18 @@ CRUParser.prototype.cours = function(input){
 				this.errMsg("Invalid creneau format.", input);
 				return false;
 			}
+            // *** Ajout de l'UE au créneau pour l'export iCalendar ***
+            c.ue = ueName; 
             this.parsedCRU[ueName].push(c);
+            // **************************************************************************
 
 			while (this.checkSTR("/",input)){
 				this.expect("/",input);
 				let cSup = this.creneauSup(input,c);
+                // *** Ajout de l'UE au créneau supplémentaire ***
+                cSup.ue = ueName;
 				this.parsedCRU[ueName].push(cSup);
+                // *******************************************************************
 			}
             this.expect("//", input); // Fin d'un Créneau
         }
