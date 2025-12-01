@@ -85,3 +85,33 @@ function salleDisponible(heureDebut, heureFin, jour){
 
     return sallesDispo ;
 }
+
+function classementCapacite(){
+    if (!analyzer.parsedCRU || Object.keys(analyzer.parsedCRU).length === 0) {
+        console.log("Veuillez d'abord ajouter un fichier à la base de données.");
+        return;
+    }
+
+    let sallesUniques = {};
+
+    for (const [ue, creneaux] of Object.entries(analyzer.parsedCRU)) {
+        for (const [id, session] of Object.entries(creneaux)) {
+            if (session.salle && session.capacite) {
+                sallesUniques[session.salle] = parseInt(session.capacite, 10);
+            }
+        }
+    }
+
+    let tableauSalles = Object.entries(sallesUniques).map(([nom, cap]) => {
+        return { nom: nom, cap: cap };
+    });
+
+    tableauSalles.sort((a, b) => b.cap - a.cap);
+
+    console.log("--- Classement des salles par capacité (Décroissant) ---");
+    tableauSalles.forEach(salle => {
+        console.log(`Salle : ${salle.nom} - Capacité : ${salle.cap}`);
+    });
+
+    return tableauSalles;
+}
