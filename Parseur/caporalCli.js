@@ -58,7 +58,9 @@ cli
 	.argument('<startDate>', 'Date de début de la période (YYYY-MM-DD).')
 	.argument('<endDate>', 'Date de fin de la période (YYYY-MM-DD).')
 	.argument('<ues...>', 'Liste des UEs à inclure, séparées par des espaces (ex: LE01 MT03).')
-	.action(({args, logger}) => {
+    // AJOUT DE L'OPTION DE NOM DE FICHIER
+    .option('-o, --output <filename>', 'Nom du fichier de sortie iCalendar (inclure .ics)', { default: 'schedule_export.ics', validator: cli.STRING })
+	.action(({args, options, logger}) => {
 		fs.readFile(args.file, 'utf8', function (err, data) {
 			if (err) {
 				return logger.warn(err);
@@ -69,7 +71,7 @@ cli
 			
 			if (analyzer.errorCount === 0 && Object.keys(analyzer.parsedCRU).length > 0) {
 				// L'analyzer GLOBAL est maintenant peuplé, genererIcal peut travailler
-				genererIcal(args.startDate, args.endDate, args.ues);
+				genererIcal(args.startDate, args.endDate, args.ues, options.output); // PASSE LE NOM DU FICHIER
 			} else {
 				logger.info("Impossible de parser le fichier CRU pour l'export iCalendar.".red);
 			}
@@ -101,10 +103,6 @@ cli
 		
 		});
 	})
-
-	// average
-	//.command('average', 'Compute the average note of each POI')
-	//.alias('avg')
 
 	// abc
 	.command('abc', 'Compute the average note of each POI and export a CSV file')

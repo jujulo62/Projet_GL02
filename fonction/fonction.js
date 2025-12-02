@@ -265,8 +265,9 @@ function classementCapacite(){
  * @param {string} dateDebutStr - Date de début (YYYY-MM-DD).
  * @param {string} dateFinStr - Date de fin (YYYY-MM-DD).
  * @param {Array<string>} ues - Liste des UEs à inclure.
+ * @param {string} outputFilename - Nom du fichier de sortie (nouvel argument).
  */
-function genererIcal(dateDebutStr, dateFinStr, ues) {
+function genererIcal(dateDebutStr, dateFinStr, ues, outputFilename) {
     if (!analyzer.parsedCRU || Object.keys(analyzer.parsedCRU).length === 0) {
         console.log("Veuillez ajouter un fichier à la base de donnée");
         return;
@@ -306,13 +307,15 @@ function genererIcal(dateDebutStr, dateFinStr, ues) {
 
     // 3. Générer le fichier complet et l'écrire
     const icalFileContent = ICalendar.generateICalFile(eventsContent.join('\n'));
-    const outputFilename = 'schedule_export.ics';
+    
+    // UTILISATION DU NOM DE FICHIER PASSÉ EN ARGUMENT
+    const finalFilename = outputFilename || 'schedule_export.ics';
 
     try {
-        require('fs').writeFileSync(outputFilename, icalFileContent); 
-        console.log(`Export iCalendar réussi ! Fichier généré : ${outputFilename}`.green);
+        require('fs').writeFileSync(finalFilename, icalFileContent); 
+        console.log(`Export iCalendar réussi ! Fichier généré : ${finalFilename}`.green);
     } catch (error) {
-        console.log(`Erreur lors de l'écriture du fichier ${outputFilename}: ${error.message}`.red);
+        console.log(`Erreur lors de l'écriture du fichier ${finalFilename}: ${error.message}`.red);
     }
 }
 
