@@ -3,11 +3,7 @@ const CRUParser = require('../Parseur/CRUParser');
 
 let analyzer = new CRUParser();
 
-function parseFile() {
-    // A completer plus tardd
-}
-
-function capaciteSalle(idSalle) {
+function capaciteSalle(idSalle, analyzer) {
 
     if (!idSalle) console.log("L'argument rentré est invalide");
 
@@ -33,7 +29,7 @@ function capaciteSalle(idSalle) {
 
 }
 
-function sallesCours(cours) {
+function sallesCours(cours, analyzer) {
 
     if (!analyzer.parsedCRU || Object.keys(analyzer.parsedCRU).length === 0) {
         console.log("Veuillez ajouter un fichier à la base de donnée");
@@ -70,7 +66,7 @@ function toMinutes(hhmm) {
 
 
 // Renvoie les disponibilités d'une salle 
-function disponibilitesSalle(salle, heureDebut="8:00", heureFin="20:00") {
+function disponibilitesSalle(salle, heureDebut="8:00", heureFin="20:00", analyzer) {
     
     if (!salle) {
         console.log("L'argument rentré est invalide");
@@ -140,7 +136,7 @@ function disponibilitesSalle(salle, heureDebut="8:00", heureFin="20:00") {
 
 
 
-function salleDisponible(heureDebut, heureFin, jour) {
+function salleDisponible(heureDebut, heureFin, jour, analyzer) {
 
     let sallesIndisponibles = new Set();
     let sallesListe = new Set();
@@ -179,7 +175,7 @@ function salleDisponible(heureDebut, heureFin, jour) {
     return sallesDispo ;
 }
 
-function verifierRecouvrements() {
+function verifierRecouvrements(analyzer) {
     if (!analyzer.parsedCRU || Object.keys(analyzer.parsedCRU).length === 0) {
         console.log("Veuillez ajouter un fichier à la base de donnée");
         return false;
@@ -224,7 +220,7 @@ function verifierRecouvrements() {
     return hasRecouvrement;
 }
 
-function classementCapacite(){
+function classementCapacite(analyzer){
     if (!analyzer.parsedCRU || Object.keys(analyzer.parsedCRU).length === 0) {
         console.log("Veuillez d'abord ajouter un fichier à la base de données.");
         return;
