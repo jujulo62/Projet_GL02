@@ -7,12 +7,12 @@ function parseFile() {
     // A completer plus tardd
 }
 
-function capaciteSalle(idSalle) {
+function capaciteSalle(analyzer, idSalle) {
 
-    if (!idSalle) console.log("L'argument rentré est invalide");
+    if (!idSalle) console.log("L'argument rentré est invalide".red);
 
     if (!analyzer.parsedCRU || Object.keys(analyzer.parsedCRU).length === 0) {
-        console.log("Veuillez ajouter un fichier à la base de donnée");
+        console.log("Veuillez ajouter un fichier en entrée".red);
         return;
     }
 
@@ -21,7 +21,7 @@ function capaciteSalle(idSalle) {
     );
 
     if (creneauxSalle.length === 0) {
-        console.log("Salle introuvable dans les créneaux");
+        console.log("Salle introuvable".red);
         return;
     }
 
@@ -33,20 +33,20 @@ function capaciteSalle(idSalle) {
 
 }
 
-function sallesCours(cours) {
+function sallesCours(analyzer, cours) {
 
     if (!analyzer.parsedCRU || Object.keys(analyzer.parsedCRU).length === 0) {
-        console.log("Veuillez ajouter un fichier à la base de donnée");
+        console.log("Veuillez ajouter un fichier en entrée".red);
         return;
     }
 
     if (!cours) {
-        console.log("L'argument rentré est invalide");
+        console.log("L'argument rentré est invalide".red);
         return;
     }
 
     if (!analyzer.parsedCRU[cours]) {
-        console.log(`Les cours ${cours} est inconnu`);
+        console.log(`Le cours ${cours} est inconnu`.red);
         return;
     }
 
@@ -70,15 +70,22 @@ function toMinutes(hhmm) {
 
 
 // Renvoie les disponibilités d'une salle 
-function disponibilitesSalle(salle, heureDebut="8:00", heureFin="20:00") {
+function disponibilitesSalle(analyzer, salle, heureDebut="8:00", heureFin="20:00") {
     
     if (!salle) {
-        console.log("L'argument rentré est invalide");
+        console.log("L'argument rentré est invalide".red);
         return;
     }
 
     if (!analyzer.parsedCRU || Object.keys(analyzer.parsedCRU).length === 0) {
-        console.log("Veuillez ajouter un fichier à la base de donnée");
+        console.log("Veuillez ajouter un fichier en entrée".red);
+        return;
+    }
+
+    // Vérifie que la salle existe dans les créneaux
+    const sallesExistantes = new Set(Object.values(analyzer.parsedCRU).flat().map(creneau => creneau.salle));
+    if (!sallesExistantes.has(salle)) {
+        console.log(`La salle ${salle} est inconnue`.red);
         return;
     }
 
@@ -140,19 +147,19 @@ function disponibilitesSalle(salle, heureDebut="8:00", heureFin="20:00") {
 
 
 
-function salleDisponible(heureDebut, heureFin, jour) {
+function sallesDisponibles(analyzer,jour, heureDebut, heureFin) {
 
     let sallesIndisponibles = new Set();
     let sallesListe = new Set();
 
 
     if (!heureDebut || !heureFin || !jour) {
-        console.log("erreur dans les arguments");
+        console.log("Erreur dans les arguments".red);
         return;
     }
 
     if (!analyzer.parsedCRU || Object.keys(analyzer.parsedCRU).length === 0) {
-        console.log("Veuillez ajouter un fichier à la base de donnée");
+        console.log("Veuillez ajouter un fichier en entrée".red);
     }
 
     const debutMin = toMinutes(heureDebut);
@@ -179,9 +186,9 @@ function salleDisponible(heureDebut, heureFin, jour) {
     return sallesDispo ;
 }
 
-function verifierRecouvrements() {
+function verifierRecouvrements(analyzer) {
     if (!analyzer.parsedCRU || Object.keys(analyzer.parsedCRU).length === 0) {
-        console.log("Veuillez ajouter un fichier à la base de donnée");
+        console.log("Veuillez ajouter un fichier en entrée".red);
         return false;
     }
 
@@ -226,7 +233,7 @@ function verifierRecouvrements() {
 
 function classementCapacite(){
     if (!analyzer.parsedCRU || Object.keys(analyzer.parsedCRU).length === 0) {
-        console.log("Veuillez d'abord ajouter un fichier à la base de données.");
+        console.log("Veuillez d'abord ajouter un fichier en entrée.".red);
         return;
     }
 
@@ -251,7 +258,7 @@ function classementCapacite(){
 
     tableauSalles.sort((a, b) => b.cap - a.cap);
 
-    console.log("--- Classement des salles par capacité (Décroissant) ---");
+    console.log("--- Classement des salles par capacité (Décroissant) ---".green);
     tableauSalles.forEach(salle => {
         console.log(`Salle : ${salle.nom} - Capacité : ${salle.cap}`);
     });
@@ -264,7 +271,7 @@ module.exports = {
     capaciteSalle,
     sallesCours,
     disponibilitesSalle,
-    salleDisponible,
+    sallesDisponibles,
     classementCapacite,
     verifierRecouvrements
 }

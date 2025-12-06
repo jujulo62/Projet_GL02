@@ -2,17 +2,18 @@ const fs = require('fs');
 const colors = require('colors');
 const CRUParser = require('./CRUParser.js');
 
-const {capaciteSalle, sallesCours} = require('../fonction/fonction.js');
+const {capaciteSalle, sallesCours, disponibilitesSalle, verifierRecouvrements, sallesDisponibles} = require('../fonction/fonction.js');
 
 const vg = require('vega');
 const vegalite = require('vega-lite');
+const Creneau = require('./Creneau.js');
 
 const cli = require("@caporal/core").default;
 cli
-	.version('vpf-parser-cli')
-	.version('0.07')	// check Vpf
-	.command('check', 'Check if <file> is a valid Vpf file')
-	.argument('<file>', 'The file to check with Vpf parser')
+	.version('cru-parser-cli')
+	.version('0.07')	// check CRU
+	.command('check', 'Check if <file> is a valid CRU file')
+	.argument('<file>', 'The file to check with CRU parser')
 	.option('-s, --showSymbols', 'log the analyzed symbol at each step', { validator : cli.BOOLEAN, default: false })
 	.option('-t, --showTokenize', 'log the tokenization results', { validator: cli.BOOLEAN, default: false })
 	.action(({args, options, logger}) => {
@@ -28,7 +29,7 @@ cli
 			if(analyzer.errorCount === 0 && Object.keys(analyzer.parsedCRU).length > 0){
 				logger.info("The .cru file is a valid cru file".green);
 			}else{
-				logger.info("The .cru file contains error , contains no UE or is in the wrong format".red);
+				logger.info("The .cru file contains error, contains no UE or is in the wrong format".red);
 			}
 			
 			logger.debug(analyzer.parsedPOI);
@@ -49,6 +50,90 @@ cli
 			analyzer.dataPrinter(data);
 		});
 	})
+
+	.command('capaciteMax','Get the maximum capacity for a given room')
+	.argument('<file>', 'The file to check with Vpf parser')
+	.argument('<roomId>', 'The room id to get the maximum capacity from')
+	.action(({args, options, logger}) => {
+		fs.readFile(args.file, 'utf8', function (err,data){
+			if (err){
+				return logger.warn(err);
+			}
+			var analyzer = new CRUParser(false, false);
+			analyzer.parse(data);
+			capaciteSalle(analyzer, args.roomId);
+		});
+	})
+
+	.command('sallesCours','Get the rooms for a given course')
+	.argument('<file>', 'The file to check with Vpf parser')
+	.argument('<courseId>', 'The course id to get the rooms from')
+	.action(({args, options, logger}) => {
+		fs.readFile(args.file, 'utf8', function (err,data){
+			if (err){
+				return logger.warn(err);
+			}
+			var analyzer = new CRUParser(false, false);
+			analyzer.parse(data);
+			sallesCours(analyzer, args.courseId);
+		});
+	})
+
+	.command('dispoSalle','Get the availability of a given room')
+	.argument('<file>', 'The file to check with Vpf parser')
+	.argument('<roomId>', 'The room id to get the availability from')
+	.action(({args, options, logger}) => {
+		fs.readFile(args.file, 'utf8', function (err,data){
+			if (err){
+				return logger.warn(err);
+			}
+			var analyzer = new CRUParser(false, false);
+			analyzer.parse(data);
+			disponibilitesSalle(analyzer, args.roomId);
+		});
+	})
+
+	.command('qualiteData','Get the data quality of a given file')
+	.argument('<file>', 'The file to get the data quality from')
+	.action(({args, options, logger}) => {
+		fs.readFile(args.file, 'utf8', function (err,data){
+			if (err){
+				return logger.warn(err);
+			}
+			var analyzer = new CRUParser(false, false);
+			analyzer.parse(data);
+			verifierRecouvrements(analyzer);
+		});
+	})
+
+	.command('sallesDispo', 'Get the available rooms for a given time')
+	.argument('<file>', 'The file to check with Vpf parser')
+	.argument('<day>', 'Day of the week (L, MA, ME, J, V, S, D)')
+	.argument('<startTime>', 'Start time in HH:MM format')
+	.argument('<endTime>', 'End time in HH:MM format')
+	.action(({args, options, logger}) => {
+		fs.readFile(args.file, 'utf8', function (err,data){
+			if (err){
+				return logger.warn(err);
+			}
+
+			// Validation des arguments jour et heures
+			if (Creneau.jours.indexOf(args.day) === -1) {
+				return logger.warn("Invalid day argument");
+			}
+
+			// Validation des arguments heureDebut et heureFin
+			const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
+			if (!timeRegex.test(args.startTime) || !timeRegex.test(args.endTime)) {
+				return logger.warn("Invalid time format. Please use HH:MM format.");
+			}
+
+			var analyzer = new CRUParser(false, false);
+			analyzer.parse(data);
+			sallesDisponibles(analyzer, args.day, args.startTime, args.endTime);
+		});
+	})
+
 	// readme
 	//.command('readme', 'Display the README.txt file')
 	//.action(({args, options, logger}) =>
@@ -56,114 +141,7 @@ cli
 	//})
 	
 	
-	// search
-	.command('search', 'Free text search on POIs\' name')
-	.argument('<file>', 'The Vpf file to search')
-	.argument('<needle>', 'The text to look for in POI\'s names')
-	.action(({args, options, logger}) => {
-		fs.readFile(args.file, 'utf8', function (err,data) {
-		if (err) {
-			return logger.warn(err);
-		}
-  
-		analyzer = new CRUParser();
-		analyzer.parse(data);
 		
-		if(analyzer.errorCount === 0){
-		
-			// Filtre à ajouter //
-			let poiAFiltrer = analyzer.parsedPOI;
-			logger.info("%s", JSON.stringify(poiAFiltrer, null, 2));
-			// Filtre à ajouter //
-			
-		}else{
-			logger.info("The .vpf file contains error".red);
-		}
-		
-		});
-	})
-
-	// average
-	//.command('average', 'Compute the average note of each POI')
-	//.alias('avg')
-
-	// abc
-	.command('abc', 'Compute the average note of each POI and export a CSV file')
-	.action(({args, options, logger}) => {
-		logger.info("abc");
-		logger.warn('Test d"erreur')
-	})
-	// average with chart
-	.command('averageChart', 'Compute the average note of each POI and export a Vega-lite chart')
-	.alias('avgChart')
-	.argument('<file>', 'The Vpf file to use')
-	.action(({args, options, logger}) => {
-		fs.readFile(args.file, 'utf8', function (err,data) {
-		if (err) {
-			return logger.warn(err);
-		}
-  
-		analyzer = new CRUParser();
-		analyzer.parse(data);
-		
-		if(analyzer.errorCount === 0){
-
-			// ToDo: Prepare the data for avg //
-			// let avg = <un array de POI ayant un attribut "averageRatings" égal à la moyenne des notes qu'il a reçu>
-			
-			var avgChart = {
-				//"width": 320,
-				//"height": 460,
-				"data" : {
-						"values" : avg
-				},
-				"mark" : "bar",
-				"encoding" : {
-					"x" : {"field" : "name", "type" : "nominal",
-							"axis" : {"title" : "Restaurants' name."}
-						},
-					"y" : {"field" : "averageRatings", "type" : "quantitative",
-							"axis" : {"title" : "Average ratings for "+args.file+"."}
-						}
-				}
-			}
-			
-			
-			
-			const myChart = vegalite.compile(avgChart).spec;
-			
- 
-			/* SVG version */
-			var runtime = vg.parse(myChart);
-			var view = new vg.View(runtime).renderer('svg').run();
-			var mySvg = view.toSVG();
-			mySvg.then(function(res){
-				fs.writeFileSync("./result.svg", res)
-				view.finalize();
-				logger.info("%s", JSON.stringify(myChart, null, 2));
-				logger.info("Chart output : ./result.svg");
-			});
-			
-			/* Canvas version */
-			/*
-			var runtime = vg.parse(myChart);
-			var view = new vg.View(runtime).renderer('canvas').background("#FFF").run();
-			var myCanvas = view.toCanvas();
-			myCanvas.then(function(res){
-				fs.writeFileSync("./result.png", res.toBuffer());
-				view.finalize();
-				logger.info(myChart);
-				logger.info("Chart output : ./result.png");
-			})			
-			*/
-			
-			
-		}else{
-			logger.info("The .vpf file contains error".red);
-		}
-		
-		});
-	})	
 
 	
 cli.run(process.argv.slice(2));
