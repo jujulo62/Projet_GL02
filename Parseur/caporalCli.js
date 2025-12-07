@@ -3,10 +3,9 @@ const colors = require('colors');
 const CRUParser = require('./CRUParser.js');
 const readline = require('readline');
 
-const {capaciteSalle, sallesCours, disponibilitesSalle, verifierRecouvrements, sallesDisponibles} = require('../fonction/fonction.js');
+const {capaciteSalle, sallesCours, disponibilitesSalle, verifierRecouvrements, sallesDisponibles, classementCapacite, tauxOccupation} = require('../fonction/fonction.js');
 
-const vg = require('vega');
-const vegalite = require('vega-lite');
+// vega and vega-lite will be loaded async when needed (ESM modules)
 const Creneau = require('./Creneau.js');
 //Functions used in this script :
 
@@ -56,12 +55,14 @@ cli
 
 	.command('start','Start the CRU schedule application')
 	.action(({args, options, logger}) => {
-		let helpCmds = ["capaciteMax", "sallesCours", "dispoSalle", "sallesDispo", "parseFile", "exit","showData"];
+		let helpCmds = ["capaciteMax", "sallesCours", "dispoSalle", "sallesDispo", "classementCapacite", "tauxOccupation", "parseFile", "exit","showData"];
 		let helpCmdsDesc = [
 			"Returns the max capacity for a room. Use example : capaciteMax S104. \n At least a single .cru file containing the room needed to search for a room.",
 			"Gives the rooms for a given course. Use case : sallesCours LE02\n At least a single file containing the class to return results.",
 			"Returns all the moments when the room is unoccupied.\n Usage : dispoSalle ROOM_ID arg1 arg2\n optional arguments :\n arg1 : start hour (H:MM) | arg2 : end hour (H:MM)",
 			"Returns all the rooms unoccupied for a given moment.\n Usage : sallesDispo ROOM_ID arg1 arg2 arg3\n arguments : arg1 : Day (M,MA,ME,J,V,S,D)\n arg2 : Start time (H:MM)\n arg3 : End time (H:MM)",
+			"Displays all rooms ranked by capacity (descending order). No arguments needed.",
+			"Display a graph showing how much each room is used during the week. No arguments needed.",
 			"Parses the given file, if it contains no errors.\n Usage : parseFile PATH_TO_FILE\n Example usage : parseFile ./edt.cru",
 			"Exit the application. No arguments needed",
 			"Shows all of the currently parsed data. No arguments needed",
@@ -113,6 +114,22 @@ cli
 							break;
 						}
 						capaciteSalle(mainAnalyzer,rest[0])
+						break;
+					case 'classementCapacite':
+						// call your JS helper, or maybe call cli.run([...]) (see option B)
+						if (!mainAnalyzer.parsedCRU || Object.keys(mainAnalyzer.parsedCRU).length === 0){
+							logger.warn("No data parsed, please include at least a single .cru file.")
+							break;
+						}
+						classementCapacite(mainAnalyzer)
+						break;
+					case 'occupation':
+						// call your JS helper, or maybe call cli.run([...]) (see option B)
+						if (!mainAnalyzer.parsedCRU || Object.keys(mainAnalyzer.parsedCRU).length === 0){
+							logger.warn("No data parsed, please include at least a single .cru file.")
+							break;
+						}
+						tauxOccupation(mainAnalyzer)
 						break;
 					case 'sallesCours':
 						if (!rest[0]){
