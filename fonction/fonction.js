@@ -1,4 +1,7 @@
 const CRUParser = require('../Parseur/CRUParser.js');
+const fs = require('fs');
+const path = require('path');
+const { exec } = require('child_process');
 
 
 function parseFile() {
@@ -307,6 +310,7 @@ function tauxOccupation(analyzer){
         totalSemaine += duree;
     }
 
+
     for (const salle in sallesOccupation) {
         const pourcentage = (sallesOccupation[salle] / totalSemaine) * 100;
         
@@ -318,15 +322,19 @@ function tauxOccupation(analyzer){
         });
     }
 
-    const cheminJson = path.join(__dirname, 'occupation.json'); 
+    const cheminData = path.join(__dirname, 'data_occupation.js'); 
     const cheminHtml = path.join(__dirname, 'occupation.html');
 
+
     try {
-        fs.writeFileSync(cheminJson, JSON.stringify(dataVega, null, 2));
-        console.log(`Fichier json généré ici : ${cheminJson}`);
+        const contenuFichier = `var dataOccupation = ${JSON.stringify(dataVega, null, 2)};`;
+        
+        fs.writeFileSync(cheminData, contenuFichier);
+        console.log(`Fichier de données JS généré ici : ${cheminData}`);
     } catch (err) {
         console.error("Erreur d'écriture :", err);
     }
+
 
     let commande;
     
@@ -340,6 +348,7 @@ function tauxOccupation(analyzer){
         default: // Linux
             commande = `xdg-open "${cheminHtml}"`;
     }
+
 
     console.log(`Ouverture du graphique : ${cheminHtml}`);
 
