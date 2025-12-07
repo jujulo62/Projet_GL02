@@ -55,7 +55,7 @@ cli
 
 	.command('start','Start the CRU schedule application')
 	.action(({args, options, logger}) => {
-		let helpCmds = ["capaciteMax", "sallesCours", "dispoSalle", "sallesDispo", "classementCapacite", "tauxOccupation", "parseFile", "exit","showData"];
+		let helpCmds = ["capaciteMax", "sallesCours", "dispoSalle", "sallesDispo", "classementCapacite", "occupation", "parseFile", "exit","showData"];
 		let helpCmdsDesc = [
 			"Returns the max capacity for a room. Use example : capaciteMax S104. \n At least a single .cru file containing the room needed to search for a room.",
 			"Gives the rooms for a given course. Use case : sallesCours LE02\n At least a single file containing the class to return results.",
@@ -270,17 +270,6 @@ cli
 		fs.readFile(args.file, 'utf8', function (err,data){
 			if (err){
 				return logger.warn(err);
-			}
-
-			// Validation des arguments jour et heures
-			if (Creneau.jours.indexOf(args.day) === -1) {
-				return logger.warn("Invalid day argument");
-			}
-
-			// Validation des arguments heureDebut et heureFin
-			const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
-			if (!timeRegex.test(args.startTime) || !timeRegex.test(args.endTime)) {
-				return logger.warn("Invalid time format. Please use HH:MM format.");
 			}
 
 			var analyzer = new CRUParser(false, false);
