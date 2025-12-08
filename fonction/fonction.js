@@ -27,6 +27,8 @@ function capaciteSalle(analyzer, idSalle) {
 
     console.log(`La capacité maximale de la salle ${idSalle} est de ${capacity} personnes.`);
 
+    return capacity;
+
 }
 
 function sallesCours(analyzer, cours) {
@@ -50,6 +52,8 @@ function sallesCours(analyzer, cours) {
 
     // Affichage des salles
     console.log(`Les salles pour le cours ${cours} sont : ${salles.join(', ')}`);
+
+    return salles
 }
 
 
@@ -188,7 +192,7 @@ function sallesDisponibles(analyzer, jour, heureDebut, heureFin) {
     const finFin = toMinutes(heureFin);
 
     if (debutMin >= finFin) {
-        logger.warn("L'heure de début doit être avant l'heure de fin".red);
+        console.log("L'heure de début doit être avant l'heure de fin".red);
         return;
     }
 
@@ -206,10 +210,11 @@ function sallesDisponibles(analyzer, jour, heureDebut, heureFin) {
         }
     }
 
-    const sallesDispo = [...sallesListe].filter(salle => !sallesIndisponibles.has(salle));
+    const sallesDispo = [...sallesListe].filter(salle => !sallesIndisponibles.has(salle)).sort();
 
     console.log(`Salles disponibles le ${jour} de ${heureDebut} à ${heureFin} : ${sallesDispo.join(', ')}`.green);
 
+    return sallesDispo;
 }
 
 function verifierRecouvrements(analyzer) {

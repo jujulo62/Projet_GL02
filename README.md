@@ -2,7 +2,7 @@
 Repo principal pour notre projet GL02, de gestion d'emploi du temps de salle de travail en université.
 
 # Execution
-Pour exécuter le projet, utilisez les commandes suivantes :
+Pour exécuter le programme, utilisez les commandes suivantes à la racine du projet :
 
 ```bash
 cd Parseur
