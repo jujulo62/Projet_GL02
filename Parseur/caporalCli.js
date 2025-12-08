@@ -3,6 +3,7 @@ const colors = require('colors');
 const CRUParser = require('./CRUParser.js');
 const readline = require('readline');
 
+// Import des fonctions, y compris l'analyzer global dans le mode direct (pour les commandes Caporal).
 const {capaciteSalle, sallesCours, disponibilitesSalle, verifierRecouvrements, sallesDisponibles, classementCapacite, genererIcal, tauxOccupation} = require('../fonction/fonction.js');
 
 // vega and vega-lite will be loaded async when needed (ESM modules)
@@ -134,28 +135,37 @@ cli
 						tauxOccupation(mainAnalyzer)
 						break;
           			case "icalendar" :
-          			    if (!mainAnalyzer.parsedCRU || Object.keys(mainAnalyzer.parsedCRU).length === 0){
+						// --- LOGIQUE ICALENDAR CORRIGÉE POUR LE MODE INTERACTIF ---
+						if (rest.length < 3) {
+							logger.warn("Arguments manquants. Usage : icalendar AAAA-MM-JJ_start AAAA-MM-JJ_end UE1 [UE2 ...] [filename.ics]")
+							break;
+						}
+						if (!mainAnalyzer.parsedCRU || Object.keys(mainAnalyzer.parsedCRU).length === 0) {
 							logger.warn("No data parsed, please include at least a single .cru file.")
 							break;
 						}
-          			    if (!rest[0]){
-							logger.warn("0 : No argument selected, please enter a lecture to search for.")
-							break;
+
+						const startDate = rest[0];
+						const endDate = rest[1];
+						
+						let outputName = 'schedule_export.ics';
+						let uesList = rest.slice(2);
+						
+						// On vérifie si le dernier argument est un nom de fichier (finissant par .ics)
+						if (uesList.length > 0 && uesList[uesList.length - 1].toLowerCase().endsWith('.ics')) {
+							outputName = uesList.pop(); // Retire et utilise le dernier argument comme nom de fichier
 						}
-          			    if (!rest[1]){
-							logger.warn("1 : No argument selected, please enter a lecture to search for.")
-							break;
+						
+						if (uesList.length === 0) {
+						    logger.warn("Aucune UE spécifiée pour l'export.");
+						    break;
 						}
-          			    if (!rest[2]){
-							logger.warn("2 : No argument selected, please enter a lecture to search for.")
-							break;
-						}
-          			    if (!rest[3]){
-							genererIcal(rest[0], rest[1], rest[2], "monEDT" , mainAnalyzer);
-							break;
-						}
-          			    genererIcal(rest[0], rest[1], rest[2], rest[3], mainAnalyzer);
-          			    break;
+
+						// Appel correct avec l'analyzer, les dates, les UEs (liste), et le nom de fichier
+						genererIcal(startDate, endDate, uesList, outputName, mainAnalyzer);
+						break;
+						// --- FIN LOGIQUE ICALENDAR CORRIGÉE ---
+
 					case 'sallesCours':
 						if (!rest[0]){
 							logger.warn("No argument selected, please enter a lecture to search for.")
@@ -167,7 +177,9 @@ cli
 						}
 						sallesCours(mainAnalyzer, rest[0]);
 						break;
+
 					case 'dispoSalle':
+						// L'heure de début et de fin sont optionnelles (rest[1] et rest[2])
 						if (!rest[0]){
 							logger.warn("No argument selected, please enter a room to search for.")
 							break;
@@ -176,11 +188,13 @@ cli
 							logger.warn("No data parsed, please include at least a single .cru file.")
 							break;
 						}
-						disponibilitesSalle(mainAnalyzer,rest[0])
+						// CORRECTION: Passer les arguments optionnels à la fonction
+						disponibilitesSalle(mainAnalyzer, rest[0], rest[1], rest[2])
 						break;
+						
 					case 'sallesDispo':
 						if (!rest[0]){
-							logger.warn("No argument 1 selected, please enter a room to search for.")
+							logger.warn("No argument 1 selected, please enter a Day (L, MA, ME, J, V, S, D).")
 							break;
 						}
 						if (!rest[1]){
@@ -188,15 +202,17 @@ cli
 							break;
 						}
 						if (!rest[2]){
-							logger.warn("No argument 2 selected, please enter an end time (EX: 8:00).")
+							logger.warn("No argument 3 selected, please enter an end time (EX: 8:00).")
 							break;
 						}
 						if (!mainAnalyzer.parsedCRU || Object.keys(mainAnalyzer.parsedCRU).length === 0){
 							logger.warn("No data parsed, please include at least a single .cru file.")
 							break;
 						}
-						disponibilitesSalle(mainAnalyzer, rest[0], rest[1], rest[2])
+						// CORRECTION : Appeler sallesDisponibles(analyzer, jour, hDeb, hFin)
+						sallesDisponibles(mainAnalyzer, rest[0], rest[1], rest[2])
 						break;
+
 					case 'parseFile':
 						if (!rest[0]){
 							logger.warn("No file selected, please select a file to parse.");
@@ -300,6 +316,64 @@ cli
 			var analyzer = new CRUParser(false, false);
 			analyzer.parse(data);
 			sallesDisponibles(analyzer, args.day, args.startTime, args.endTime);
+		});
+	})
+
+	// *******************************************************************
+	// COMMANDE ICALENDAR (MODE LIGNE DE COMMANDE DIRECTE)
+	// *******************************************************************
+	.command('icalendar', 'Génère un fichier iCalendar pour les UEs entre 2 dates.')
+	.argument('<file>', 'Le fichier CRU à parser.')
+	.argument('<startDate>', 'Date de début de la période (YYYY-MM-DD).')
+	.argument('<endDate>', 'Date de fin de la période (YYYY-MM-DD).')
+	.argument('<ues...>', 'Liste des UEs à inclure, séparées par des espaces (ex: LE01 MT03).')
+    .option('-o, --output <filename>', 'Nom du fichier de sortie iCalendar (inclure .ics)', { default: 'schedule_export.ics', validator: cli.STRING })
+	.action(({args, options, logger}) => {
+		fs.readFile(args.file, 'utf8', function (err, data) {
+			if (err) {
+				return logger.warn(err);
+			}
+			
+			// Création d'un analyzer local pour la commande CLI. 
+            // On peut aussi utiliser l'analyzer global importé si c'est la seule source de données
+			var analyzer = new CRUParser(); 
+			analyzer.parse(data); 
+			
+			if (analyzer.errorCount === 0 && Object.keys(analyzer.parsedCRU).length > 0) {
+				// Utiliser l'analyzer local pour passer les données à genererIcal
+				genererIcal(args.startDate, args.endDate, args.ues, options.output, analyzer);
+			} else {
+				logger.info("Impossible de parser le fichier CRU pour l'export iCalendar.".red);
+			}
+		});
+	})
+
+	// *******************************************************************
+	// COMMANDES D'ANALYSE ET GRAPHIQUES (A FAIRE)
+	// *******************************************************************
+	.command('classementCapacite','Display rooms ranked by capacity (descending order)')
+	.argument('<file>', 'The file to check with CRU parser')
+	.action(({args, options, logger}) => {
+		fs.readFile(args.file, 'utf8', function (err,data){
+			if (err){
+				return logger.warn(err);
+			}
+			var analyzer = new CRUParser(false, false);
+			analyzer.parse(data);
+			classementCapacite(analyzer);
+		});
+	})
+
+	.command('occupation','Display a graph showing how much each room is used during the week')
+	.argument('<file>', 'The file to check with CRU parser')
+	.action(({args, options, logger}) => {
+		fs.readFile(args.file, 'utf8', function (err,data){
+			if (err){
+				return logger.warn(err);
+			}
+			var analyzer = new CRUParser(false, false);
+			analyzer.parse(data);
+			tauxOccupation(analyzer);
 		});
 	})
 
