@@ -3,7 +3,7 @@ const colors = require('colors');
 const CRUParser = require('./CRUParser.js');
 const readline = require('readline');
 
-const {capaciteSalle, sallesCours, disponibilitesSalle, verifierRecouvrements, sallesDisponibles, classementCapacite, tauxOccupation} = require('../fonction/fonction.js');
+const {capaciteSalle, sallesCours, disponibilitesSalle, verifierRecouvrements, sallesDisponibles, classementCapacite, genererIcal, tauxOccupation} = require('../fonction/fonction.js');
 
 // vega and vega-lite will be loaded async when needed (ESM modules)
 const Creneau = require('./Creneau.js');
@@ -25,16 +25,17 @@ cli
 				return logger.warn(err);
 			}
 	  
-			var analyzer = new CRUParser(options.showTokenize, options.showSymbols);
-			analyzer.parse(data);
+			// Crée une instance locale pour le check/affichage, qui ne doit PAS être l'analyzer global
+			var localAnalyzer = new CRUParser(options.showTokenize, options.showSymbols); 
+			localAnalyzer.parse(data);
 			
-			if(analyzer.errorCount === 0 && Object.keys(analyzer.parsedCRU).length > 0){
+			if(localAnalyzer.errorCount === 0 && Object.keys(localAnalyzer.parsedCRU).length > 0){
 				logger.info("The .cru file is a valid cru file".green);
 			}else{
 				logger.info("The .cru file contains error, contains no UE or is in the wrong format".red);
 			}
 			
-			logger.debug(analyzer.parsedCRU);
+			logger.debug(localAnalyzer.parsedPOI);
 
 		});
 			
@@ -55,7 +56,7 @@ cli
 
 	.command('start','Start the CRU schedule application')
 	.action(({args, options, logger}) => {
-		let helpCmds = ["capaciteMax", "sallesCours", "dispoSalle", "sallesDispo", "classementCapacite", "occupation", "parseFile", "exit","showData"];
+		let helpCmds = ["capaciteMax", "sallesCours", "dispoSalle", "sallesDispo", "classementCapacite", "occupation", "icalendar" "parseFile", "exit","showData"];
 		let helpCmdsDesc = [
 			"Returns the max capacity for a room. Use example : capaciteMax S104. \n At least a single .cru file containing the room needed to search for a room.",
 			"Gives the rooms for a given course. Use case : sallesCours LE02\n At least a single file containing the class to return results.",
@@ -63,7 +64,8 @@ cli
 			"Returns all the rooms unoccupied for a given moment.\n Usage : sallesDispo ROOM_ID arg1 arg2 arg3\n arguments : arg1 : Day (M,MA,ME,J,V,S,D)\n arg2 : Start time (H:MM)\n arg3 : End time (H:MM)",
 			"Displays all rooms ranked by capacity (descending order). No arguments needed.",
 			"Display a graph showing how much each room is used during the week. No arguments needed.",
-			"Parses the given file, if it contains no errors.\n Usage : parseFile PATH_TO_FILE\n Example usage : parseFile ./edt.cru",
+			"Generates an iCalendar (.ics) file for the selected University Courses (UEs) over a specified date range. \n Usage: icalendar FILE_CRU AAAA-MM-JJ_start AAAA-MM-JJ_end UE1 UE2 [...] -o output.ics \n Option: -o/--output <filename> to set the custom output filename.",
+      "Parses the given file, if it contains no errors.\n Usage : parseFile PATH_TO_FILE\n Example usage : parseFile ./edt.cru",
 			"Exit the application. No arguments needed",
 			"Shows all of the currently parsed data. No arguments needed",
 			"",
@@ -131,6 +133,29 @@ cli
 						}
 						tauxOccupation(mainAnalyzer)
 						break;
+          case "icalendar" :
+            if (!mainAnalyzer.parsedCRU || Object.keys(mainAnalyzer.parsedCRU).length === 0){
+							logger.warn("No data parsed, please include at least a single .cru file.")
+							break;
+						}
+            if (!rest[0]){
+							logger.warn("No argument selected, please enter a lecture to search for.")
+							break;
+						}
+            if (!rest[1]){
+							logger.warn("No argument selected, please enter a lecture to search for.")
+							break;
+						}
+            if (!rest[2]){
+							logger.warn("No argument selected, please enter a lecture to search for.")
+							break;
+						}
+            if (!rest[3]){
+							logger.warn("No argument selected, please enter a lecture to search for.")
+							break;
+						}
+            genererIcal(rest[0], rest[1], rest[2], rest[3], mainAnalyzer);
+            break;
 					case 'sallesCours':
 						if (!rest[0]){
 							logger.warn("No argument selected, please enter a lecture to search for.")
@@ -289,4 +314,3 @@ cli
 
 	
 cli.run(process.argv.slice(2));
-	
