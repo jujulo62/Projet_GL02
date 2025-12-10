@@ -27,12 +27,12 @@ parseFile valideEdt.cru
 Nous pouvons par la suite utiliser des fonctions qui concernent les fonctions des spécifications: 
 ```bash
 help
-capaciteMax
-sallesCours
-dispoSalle
-sallesDispo
-classementCapacite
-occupation
+capaciteMax (Num_de_la_salle)
+sallesCours (ID_du_cours)
+dispoSalle (Jour) (Debut_heure) (Fin_heure)
+sallesDispo (Room_ID) (Debut_heure) (Fin_heure)
+classementCapacite 
+occupation 
 icalendar
 parseFile
 showData
