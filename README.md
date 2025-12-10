@@ -42,26 +42,27 @@ exit
 Concernant l'utilisation des tests unitaires de Jasmine, il se font aussi dans le dossier Paurseur
 
 
-# Command : capaciteMax
+# Commands 
+## capaciteMax
 info: Description : Renvoie la capacité maximale pour une salle.
  Au moins un fichier .cru contenant la salle nécessaire pour rechercher une salle.
 
 
-# Command : sallesCours
+## sallesCours
 info: Description : Donne les salles pour un cours donné. 
 Exemple d'utilisation : sallesCours LE02
 Au moins un fichier contenant la classe pour renvoyer les résultats.
 
 
 
-# Command : dispoSalle
+## dispoSalle
 info: Description : Renvoie tous les moments où la salle est inoccupée.
  Usage : dispoSalle ROOM_ID arg1 arg2
  optionels arguments :
  arg1 : start hour (H:MM) | arg2 : end hour (H:MM)
 
 
-# Command : sallesDispo
+## sallesDispo
 info: Description : Renvoie toutes les salles inoccupées pour un moment donné.
  Usage : sallesDispo ROOM_ID arg1 arg2 arg3
  arguments : arg1 : Day (M,MA,ME,J,V,S,D)
@@ -69,16 +70,16 @@ info: Description : Renvoie toutes les salles inoccupées pour un moment donné.
  arg3 : End time (H:MM)
 
 
-# Command : classementCapacite
+## classementCapacite
 info: Description : Affiche toutes les salles classées par capacité (ordre décroissant). Aucun argument nécessaire.
 
 
-# Command : occupation
+## occupation
 info: Description : Affiche un graphique montrant combien chaque salle est utilisée durant la semaine. Aucun argument nécessaire.        
 
 
 
-# Command : icalendar
+## icalendar
 info: Description : Génère un fichier iCalendar (.ics) pour les Unités d’Enseignement (UE) sélectionnées sur une plage de dates spécifiée.
  Usage: icalendar  AAAA-MM-JJ AAAA-MM-JJ UE1 UE2 [...] output.ics
  La première date à rentrer est la date de début et la seconde la date de fin.
@@ -86,15 +87,15 @@ info: Description : Génère un fichier iCalendar (.ics) pour les Unités d’En
 
 
 
-# Command : parseFile
+## parseFile
 info: Description : Analyse le fichier donné, s’il ne contient aucune erreur.
  Usage : parseFile PATH_TO_FILE
  Example usage : parseFile ./edt.cru
 
 
-# Command : exit
+## exit
 info: Description : Quitte l'application. Aucun argument nécessaire
 
 
-# Command : showData
+## showData
 info: Description : Affiche toutes les données actuellement analysées. Aucun argument nécessaire
