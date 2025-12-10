@@ -21,7 +21,7 @@ node caporalCli.js start
 
 Ensuite pour parser :
 ```bash
-parseFile valideEdt.cru
+parseFile cheminVersLeFichierAParser ex: valideEdt.cru
 ```
 
 Nous pouvons par la suite utiliser des fonctions qui concernent les fonctions des spécifications: 
